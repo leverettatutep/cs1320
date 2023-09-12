@@ -9,4 +9,5 @@ function [name, info] = robot_initialization()
 % You must set all of the return variables
 name = 'test';
 info.test = 0;
+info.speed = 100000;
 end
