@@ -62,7 +62,7 @@ collision = false;
 
 % Initialize the simulated robot position and velocity.
 X = [0; rand() * 2 - 1; rand() * pi - pi / 2; 0; 0];
-%X = [0; -.25; rand() * pi - pi/2; 0; 0]; %LJE Only the initial orientation is random
+% X = [0; 0; rand() * pi - pi/2; 0; 0]; %LJE Only the initial orientation is random
 
 % wheel diameter is 2.625 inches, convert to radius and meters
 r_wheel = 2.625 / 2 * 2.54 / 100;
