@@ -10,4 +10,9 @@ function [name, info] = robot_initialization()
 name = 'test';
 info.test = 0;
 info.speed = 100000;
+info.numberCalled = 0;
+info.trialsToDo = 20;
+info.angleAtMin = zeros(1,info.trialsToDo);
+info.rangeAtMin = zeros(1,info.trialsToDo);
+info.goal = 0;
 end

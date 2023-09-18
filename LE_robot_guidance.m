@@ -1,4 +1,6 @@
 function [u, stop, info] = LE_robot_guidance(t, lidar_scan, wheel_encoders, info)
+    info.numberCalled = info.numberCalled + 1;
+    info.numberCalled
 % robot guidance function
 %
 % This will be called by the sim / robot interface. This function receives
@@ -33,47 +35,90 @@ function [u, stop, info] = LE_robot_guidance(t, lidar_scan, wheel_encoders, info
 %       managament code will give it back to you next time this function runs)
 %       so if you need to keep track of anything between runs you can put it in
 %       here. Make it an array, cell array, structure, whatever you like.
+% Diameter of the wheel = 2.625 inches = 0.0333375 meters
+% Center of wheel is 0.1 meter (about 4 inches) from center of robot
+% Vcenter = Wwheel * 0.03333375 and Vcenter = Wwheel / 0.1 so Wwheel = 
 figure(2)
 h = polarplot(lidar_scan.theta,lidar_scan.range);
-[x,y] = pol2cart(lidar_scan.theta,lidar_scan.range);
-filex = fopen('x.dat','w');
-filey = fopen('y.dat','w');
-fprintf(filex,'%f\r\n',x);
-fprintf(filey,'%f\r\n',y);
-fclose(filex);
-fclose(filey);
-figure(3)
-hxy = scatter(x,y);
-[p,s] = polyfit(x,y,1);
-u = [0;0];
-stop = false;
-% u = input('Two speeds')
-whatwant = input(['Right Left sTop Speed Go Cw ccW'],'s')
-if whatwant == 'r'
-    u = right();
-end
-if whatwant == 'l'
-    u = left();
-end
-if whatwant == 't'
-    u = stopit();
-    stop = true;
-end
-if whatwant == 's'
-    info.speed = input('Enter speed ');
-end
-if whatwant == 'c'
-    u = clockWise();
-end
-if whatwant == 'w'
-    u = counterClockWise();
-end
-if whatwant == 'g'
-    u = forward();
+theta = lidar_scan.theta * 180/pi();
+range = lidar_scan.range;
+[rangeMin,iMin]=min(abs(range));
+thetaMin = theta(iMin);
+info.angleAtMin(info.numberCalled) = thetaMin;
+info.rangeAtMin(info.numberCalled) = rangeMin;
+
+if info.numberCalled == 1 %Initialize the routine
+    if thetaMin > 0 %See if the left or right wall is the closest
+        info.goal = 90; %left is closest
+    else
+        info.goal = -90; %right is closest
+    end
+    info.firstTime = false;
 end
 
-u = u/.0333;
-u = u * info.speed;
+TenDegrees = 5*pi()/6/2; %2 is a fudge factor
+OneCM = 3/2/2; %Second 2 is a fudge factor This does not work.
+u = [0;0];
+stop = false;
+
+%Which way am I pointed
+[junk, ZeroIndex] = min(abs(theta));
+if ZeroIndex + size(theta,2)/2 > size(theta,2)
+    One80Index = ZeroIndex - floor(size(theta,2)/2);
+else
+    One80Index = ZeroIndex + floor(size(theta,2)/2); %not sure its floor
+end
+
+gain = .01;
+RotateAmount = gain*(thetaMin - info.goal)*TenDegrees;
+if RotateAmount < 0 
+    RotateAmount = -RotateAmount;
+    uu = clockWise();
+else
+    uu = counterClockWise()*RotateAmount;
+end
+u = double(uu * RotateAmount);
+
+% if info.numberCalled == 10
+    % stop = false;
+    % u = clockWise()*TenDegrees;
+    % u = [1,1] * OneCM;
+% end
+% if info.numberCalled == info.trialsToDo
+%     stop = true;
+%     u = [0;0];
+%     fid = fopen('id.dat','w');
+%     fprintf(fid,'%f,',info.angleAtMin);
+%     fclose(fid);
+% end
+
+% % [x,y] = pol2cart(lidar_scan.theta,lidar_scan.range);
+% % filex = fopen('x.dat','w');
+% % filey = fopen('y.dat','w');
+% % fprintf(filex,'%f\r\n',x);
+% % fprintf(filey,'%f\r\n',y);
+% % fclose(filex);
+% % fclose(filey);
+% % figure(3)
+% % hxy = scatter(x,y);
+% % [p,s] = polyfit(x,y,1);
+% % u = [0;0];
+% % stop = false;
+% % % u = input('Two speeds')
+% % whatwant = input(['Cw or ccW and speed'],'s')
+% % if whatwant == 't'
+% %     u = stopit();
+% %     stop = true;
+% % end
+% % if whatwant == 'c'
+% %     u = clockWise();
+% % end
+% % if whatwant == 'w'
+% %     u = counterClockWise();
+% % end
+% % 
+% % u = u/.0333;
+% % u = u * info.speed;
 end
 
 function u = left()

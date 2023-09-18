@@ -1,7 +1,7 @@
 % Note that you shouldn't have to do anything in this file
 clearvars -EXCEPT sim_node
 close all
-
+% rng(123456); %LJE use a seed so debugging is consistent
 %% Setup
 % construct for the container class which I use to shuttle data around
 interface = RobotInterface();
@@ -62,6 +62,7 @@ collision = false;
 
 % Initialize the simulated robot position and velocity.
 X = [0; rand() * 2 - 1; rand() * pi - pi / 2; 0; 0];
+%X = [0; -.25; rand() * pi - pi/2; 0; 0]; %LJE Only the initial orientation is random
 
 % wheel diameter is 2.625 inches, convert to radius and meters
 r_wheel = 2.625 / 2 * 2.54 / 100;
@@ -130,8 +131,10 @@ while ~collision && ~interface.stop
 
         n_theta = 35;
         theta_min = -pi + (rand() * pi / n_theta / 2);
+        theta_min = -pi; %LJE remove the randomness of the angles
         dtheta = 2 * pi / n_theta;
         theta_max = pi;
+        theta_max = pi - dtheta/2; %LJE once randomness removed ended up with too many values
         theta = theta_min:dtheta:theta_max;
         theta = theta + X(3);
 
@@ -152,6 +155,7 @@ while ~collision && ~interface.stop
                 X(1:2), v(:, idx), ...
                 wall_positions, wall_normals, wall_x_lim, wall_y_lim);
             d(idx) = this_distance + sqrt(R_lidar) * randn();
+            d(idx) = this_distance; %LJE remove randomness from lidar data
             intersections(:, idx) = this_intersection;
         end
         
@@ -168,7 +172,8 @@ while ~collision && ~interface.stop
         msg.range_max = single(10.0);
         msg.ranges = single(d);
         ninf = sum(isinf(d));
-        msg.ranges(isinf(d)) = rand(ninf, 1) * 5 + 5;
+        % msg.ranges(isinf(d)) = rand(ninf, 1) * 5 + 5;
+        msg.ranges(isinf(d)) = 9; %LJE make NON readings a range of 9 instead of random
         send(range_publisher, msg);
         
         scan.XData = intersections(1, :);
