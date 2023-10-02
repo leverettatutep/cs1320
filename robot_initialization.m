@@ -16,4 +16,7 @@ info.angleAtMin = zeros(1,info.trialsToDo);
 info.rangeAtMin = zeros(1,info.trialsToDo);
 info.goal = 0;
 info.state = 0; %initialize
+info.closest = 10;
+info.farthest = 20;
+info.turnamount = 10;
 end

@@ -56,41 +56,58 @@ function [uu, stop, info] = LE_robot_guidance(t, lidar_scan, wheel_encoders, inf
     info.angleAtMin(info.numberCalled) = thetaMin;
     info.rangeAtMin(info.numberCalled) = rangeMin;
 
-% Is this the first time in? Initialize
-    if info.state == 0 %Initialize the routine
-        if thetaMin > 0 %See if the left or right wall is the closest
-            info.goal = 90; %left is closest
-        else
-            info.goal = -90; %right is closest
-        end
-        info.state = 1; %Align to wall
-    end
-
-% Align to within tol degrees to wall, doesn't work if starts in exact
-% middle
-    if info.state == 1 
-        tol = 7;
-        angMisalign = thetaMin - info.goal;
-        if abs(angMisalign) > tol
-            gain = .01;
-            RotateAmount = gain*(angMisalign)*TenDegrees;
-            if RotateAmount < 0 
-                RotateAmount = -RotateAmount;
-                u = clockWise()*RotateAmount;
+    switch info.state
+    % Is this the first time in? Initialize
+        case 0 %Initialize the routine
+            if thetaMin > 0 %See if the left or right wall is the closest
+                info.goal = 90; %left is closest
             else
-                u = counterClockWise()*RotateAmount;
+                info.goal = -90; %right is closest
             end
-        else
-            info.state = 2 %Wall walk
-        end
-    end
+            info.state = 1; %Align to wall
+    
+    % Align to within tol degrees to wall, doesn't work if starts in exact
+    % middle
+    % Rotate to info.goal
+        case 1 %Rotate to info.goal
+            tol = 7;
+            angMisalign = thetaMin - info.goal;
+            if abs(angMisalign) > tol
+                gain = .01;
+                RotateAmount = gain*(angMisalign)*TenDegrees;
+                if RotateAmount < 0 
+                    RotateAmount = -RotateAmount;
+                    u = clockWise()*RotateAmount;
+                else
+                    u = counterClockWise()*RotateAmount;
+                end
+            else
+                info.state = 2 %Walk forward
+            end
 
-% Wall walk    
-    if info.state == 2 
-        forwardGain = 100;
-        u = forward() * OneCM * forwardGain;
-        % thetaMin
-        % stop = true;
+    % Wall walk    
+        case 2 
+            forwardGain = 100;
+            u = forward() * OneCM * forwardGain;
+            info.state = 3; %Check how close I am to the wall
+
+    % Check for the wall
+        case 3
+            if rangeMin < info.closest
+                info.goal = info.goal - info.turnamount;
+                info.state = 1 % Rotate next
+            else
+                if rangeMin > info.farthest
+                    info.goal = info.goal + info.turnamount;
+                    info.state = 1 %Rotate next
+                else
+                    info.state = 2 %Walt forward
+                end
+            end
+
+    % default
+        otherwise
+            info.state = 2;
     end
 
     uu = double(u);
