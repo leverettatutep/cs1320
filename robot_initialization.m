@@ -12,11 +12,11 @@ info.test = 0;
 info.speed = 100000;
 info.numberCalled = 0;
 info.trialsToDo = 20;
-info.angleAtMin = zeros(1,info.trialsToDo);
-info.rangeAtMin = zeros(1,info.trialsToDo);
+% info.angleAtMin = zeros(1,info.trialsToDo);
+% info.rangeAtMin = zeros(1,info.trialsToDo);
 info.goal = 0;
 info.state = 0; %initialize
-info.closest = 10;
-info.farthest = 20;
-info.turnamount = 10;
+info.closest = .5;
+info.farthest = .8;
+info.turnamount = 30;
 end
