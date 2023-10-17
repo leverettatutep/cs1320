@@ -89,7 +89,7 @@ function [uu, stop, info] = LE_robot_guidance(t, lidar_scan, wheel_encoders, inf
                 angMisalign = thetaMin - turnTo;
                 [u, hitGoal] = RotateToGoal(angMisalign,tol,TenDegrees);
                 if hitGoal 
-                    info.state = 3; %Wall walk
+                    info.state = 3; %Walk away
                 end
             else
                 if rangeMin > info.farthest
@@ -102,18 +102,27 @@ function [uu, stop, info] = LE_robot_guidance(t, lidar_scan, wheel_encoders, inf
                     angMisalign = thetaMin - turnTo;
                     [u, hitGoal] = RotateToGoal(angMisalign,tol,TenDegrees);
                     if hitGoal 
-                        info.state = 3; %Wall walk
+                        info.state = 4; %walk toward
                     end
                 else
-                    info.state = 3;
+                    info.state = 3; %Walk away
                     end
             end
             
-    % Wall walk    
+    % walk away    
         case 3 
             forwardGain = 100;
             u = forward() * OneCM * forwardGain;
-            % info.state = 3; %Check how close I am to the wall
+            if rangeMin > info.farthest
+                info.state = 2;
+            end
+
+        case 4 %Walk toward
+            forwardGain = 100;
+            u = forward() * OneCM * forwardGain;
+            if rangeMin < info.closest
+                info.state = 2;
+            end
 
    
     % default

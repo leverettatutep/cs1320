@@ -16,7 +16,7 @@ info.trialsToDo = 20;
 % info.rangeAtMin = zeros(1,info.trialsToDo);
 info.goal = 0;
 info.state = 0; %initialize
-info.closest = .5;
-info.farthest = .8;
-info.turnamount = 30;
+info.closest = .3; %.1 hugs the wall well
+info.farthest = .5; %.2 is reasonable
+info.turnamount = 15;
 end
