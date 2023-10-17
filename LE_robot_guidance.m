@@ -51,7 +51,7 @@ function [uu, stop, info] = LE_robot_guidance(t, lidar_scan, wheel_encoders, inf
 % Get the lidar data in a convenient variable
     theta = lidar_scan.theta * 180/pi();
     range = lidar_scan.range;
-    [rangeMin,iMin]=min(abs(range));
+    [rangeMin,iMin]=min(range);
     thetaMin = theta(iMin);
     info.angleAtMin(info.numberCalled) = thetaMin;
     info.rangeAtMin(info.numberCalled) = rangeMin;
